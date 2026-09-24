@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LinkBrowser</title>
+<meta name="description" content="Search Google or load a URL directly, in one page.">
+<style>
+:root{
+  --bg:#070b09;--panel:#0d1511;--panel2:#101b16;--text:#eafff0;--muted:#8ca496;
+  --line:#1b3025;--accent:#39ff88;--shadow:0 18px 50px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input{font:inherit}
+button{cursor:pointer}
+.bar{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:.2px;display:flex;gap:8px;align-items:center;margin-right:4px}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+.tabs{display:flex;gap:6px;margin-right:6px}
+.tab{border:1px solid var(--line);border-radius:9px;padding:9px 13px;background:var(--panel2);color:var(--muted)}
+.tab.active{color:var(--text);border-color:var(--accent)}
+input{flex:1;min-width:120px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text);outline:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(57,255,136,.08)}
+.btn{border:1px solid var(--line);border-radius:9px;padding:10px 13px;background:var(--panel2);color:var(--text)}
+.btn.primary{border:0;background:var(--accent);color:#041109;font-weight:800}
+.btn.primary:hover{background:#65ffa4}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.stage{position:relative;flex:1;background:#000;overflow:auto}
+#frame{position:absolute;inset:0;width:100%;height:100%;border:0}
+#hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted)}
+#hint .box{max-width:480px}
+#hint h2{color:var(--text);margin:0 0 8px}
+#hint code{color:var(--accent)}
+.note{font-size:.78rem;color:var(--muted);padding:6px 12px 10px;background:var(--panel)}
+#searchPane{position:absolute;inset:0;overflow:auto;background:var(--bg);padding:24px;display:none}
+#searchPane.active{display:block}
+.gcse-search{max-width:820px;margin:0 auto}
+/* Loosely restyle the Google CSE widget to sit on a dark background */
+.gsc-control-cse{background:transparent!important;border:none!important;padding:0!important}
+.gsc-input-box{background:var(--panel2)!important;border-color:var(--line)!important}
+.gsc-search-button-v2{background:var(--accent)!important;border-color:var(--accent)!important}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="brand"><span class="brand-dot"></span>LinkBrowser</div>
+    <div class="tabs">
+      <button id="tabSearch" class="tab active">Search</button>
+      <button id="tabUrl" class="tab">Direct URL</button>
+    </div>
+    <input id="urlInput" type="text" placeholder="Paste a URL, e.g. https://example.com" autocomplete="off" hidden>
+    <button id="goBtn" class="btn primary" hidden>Go</button>
+    <button id="openBtn" class="btn" title="Open in a new tab" hidden>↗ Open</button>
+    <button id="fsBtn" class="btn" title="Fullscreen">⛶</button>
+  </div>
+  <div class="stage">
+    <div id="searchPane" class="active">
+      <!-- Google Programmable Search Engine widget -->
+      <script async src="https://cse.google.com/cse.js?cx=f5c3e526bda424aa4"></script>
+      <div class="gcse-search"></div>
+    </div>
+    <div id="hint">
+      <div class="box">
+        <h2>Paste a link above and press Go</h2>
+        <p>Loads the page directly in this frame. If a site blocks embedding (its own <code>X-Frame-Options</code>/CSP setting), it will refuse to load here — that block can't be bypassed from this page. Use "↗ Open" for those.</p>
+      </div>
+    </div>
+    <iframe id="frame" title="Embedded page" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; web-share" allowfullscreen hidden></iframe>
+  </div>
+  <div class="note">Tip: for YouTube/Twitch/TikTok, use their normal share URL — StreamHub-style sites should convert these to official embeds. Direct URL loads the raw URL as-is.</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const input = $("urlInput"), frame = $("frame"), hint = $("hint"), openBtn = $("openBtn"), fsBtn = $("fsBtn");
+const goBtn = $("goBtn"), searchPane = $("searchPane"), tabSearch = $("tabSearch"), tabUrl = $("tabUrl");
+let current = "";
+
+function showSearch(){
+  searchPane.classList.add("active");
+  frame.hidden = true; hint.hidden = true;
+  input.hidden = true; goBtn.hidden = true; openBtn.hidden = true;
+  tabSearch.classList.add("active"); tabUrl.classList.remove("active");
+}
+function showUrlMode(){
+  searchPane.classList.remove("active");
+  input.hidden = false; goBtn.hidden = false; openBtn.hidden = false;
+  hint.hidden = !!current;
+  frame.hidden = !current;
+  tabUrl.classList.add("active"); tabSearch.classList.remove("active");
+}
+tabSearch.onclick = showSearch;
+tabUrl.onclick = showUrlMode;
+
+function normalize(raw){
+  raw = raw.trim();
+  if(!raw) return null;
+  if(!/^https?:\/\//i.test(raw)) raw = "https://" + raw;
+  try{ return new URL(raw).href; }catch{ return null; }
+}
+
+function go(){
+  const url = normalize(input.value);
+  if(!url){ input.focus(); return; }
+  current = url;
+  input.value = url;
+  frame.src = url;
+  frame.hidden = false;
+  hint.hidden = true;
+}
+
+// Support ?url= to deep-link straight into Direct URL mode, e.g. from a link runner.
+(function initFromQuery(){
+  const q = new URLSearchParams(location.search).get("url");
+  if(q){ showUrlMode(); input.value = q; go(); }
+})();
+
+goBtn.onclick = go;
+input.addEventListener("keydown", e => { if(e.key === "Enter") go(); });
+openBtn.onclick = () => { if(current) window.open(current, "_blank", "noopener"); };
+
+fsBtn.onclick = () => {
+  const stage = document.querySelector(".stage");
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else if(stage.requestFullscreen){ stage.requestFullscreen(); }
+};
+document.addEventListener("fullscreenchange", () => {
+  fsBtn.textContent = document.fullscreenElement ? "⤢" : "⛶";
+});
+</script>
+</body>
+</html>
