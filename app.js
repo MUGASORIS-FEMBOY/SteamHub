@@ -37,9 +37,11 @@ const services = {
 const $ = id => document.getElementById(id);
 const player = $("player"), empty = $("emptyPlayer"), external = $("externalCard");
 const notice = $("notice"), urlInput = $("urlInput"), title = $("playerTitle");
+const playerPanel = $("playerPanel"), fsBtn = $("fullscreenBtn");
 
 function resetPlayer(){
   player.hidden = true; player.src = ""; empty.hidden = false; external.hidden = true;
+  fsBtn.hidden = true;
 }
 function setService(key){
   state.service = key;
@@ -93,19 +95,19 @@ function load(){
   resetPlayer();
   if(state.service==="youtube"){
     const id=ytId(url.href);
-    if(id){player.src=`https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;player.hidden=false;empty.hidden=true;return}
+    if(id){player.src=`https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;player.hidden=false;empty.hidden=true;fsBtn.hidden=false;return}
     showExternal(url.href,"That YouTube URL could not be converted to an embed, so it will open normally.");
   } else if(state.service==="twitch"){
     const channel=twitchPath(url.href);
     if(channel){
       const parent=location.hostname||"localhost";
       player.src=`https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&autoplay=false`;
-      player.hidden=false;empty.hidden=true;return;
+      player.hidden=false;empty.hidden=true;fsBtn.hidden=false;return;
     }
     showExternal(url.href,"Use a Twitch channel URL such as https://www.twitch.tv/channel.");
   } else if(state.service==="tiktok"){
     const embed=tikTokEmbed(url.href);
-    if(embed){player.src=embed;player.hidden=false;empty.hidden=true;return}
+    if(embed){player.src=embed;player.hidden=false;empty.hidden=true;fsBtn.hidden=false;return}
     showExternal(url.href,"TikTok only provides an embeddable player for supported video URLs. This one will open normally.");
   } else if(state.service==="vrm"){
     showExternal(url.href,"VR-M.net content may block iframe embedding. The safe fallback is to open it in a new tab.");
@@ -118,6 +120,17 @@ urlInput.addEventListener("keydown",e=>{if(e.key==="Enter")load()});
 $("clearBtn").onclick=()=>{urlInput.value="";resetPlayer();title.textContent="Choose a service";state.service=null;document.querySelectorAll(".service").forEach(x=>x.classList.remove("active"))};
 $("themeBtn").onclick=()=>{document.body.classList.toggle("light");localStorage.setItem("streamhub-light",document.body.classList.contains("light"))};
 if(localStorage.getItem("streamhub-light")==="true")document.body.classList.add("light");
+fsBtn.onclick=()=>{
+  if(document.fullscreenElement){
+    document.exitFullscreen();
+  } else if(playerPanel.requestFullscreen){
+    playerPanel.requestFullscreen();
+  }
+};
+document.addEventListener("fullscreenchange",()=>{
+  fsBtn.textContent = document.fullscreenElement ? "⤢" : "⛶";
+  fsBtn.title = document.fullscreenElement ? "Exit fullscreen" : "Fullscreen";
+});
 $("aboutBtn").onclick=()=>$("aboutDialog").showModal();
 $("closeAbout").onclick=()=>$("aboutDialog").close();
 $("aboutDialog").addEventListener("click",e=>{if(e.target===$("aboutDialog"))$("aboutDialog").close()});

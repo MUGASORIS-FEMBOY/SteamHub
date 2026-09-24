@@ -55,12 +55,13 @@
         </div>
       </div>
 
-      <div class="panel player-panel">
+      <div id="playerPanel" class="panel player-panel">
         <div id="emptyPlayer" class="empty-player">
           <div class="play-ring">▶</div>
           <h2>Nothing loaded</h2>
           <p>Your embedded player will appear here when the selected service supports it.</p>
         </div>
+        <button id="fullscreenBtn" class="fullscreen-btn" title="Fullscreen" hidden>⛶</button>
         <iframe id="player" title="Streaming player" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share" allowfullscreen hidden></iframe>
         <div id="externalCard" class="external-card" hidden>
           <div class="external-icon">↗</div>
