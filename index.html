@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>StreamHub</title>
+  <meta name="description" content="A personal streaming hub for Twitch, YouTube, TikTok and VR-M.net.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-dot"></span>StreamHub</div>
+    <div class="top-actions">
+      <button id="themeBtn" class="icon-btn" title="Toggle theme">☾</button>
+      <button id="aboutBtn" class="icon-btn" title="About">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">YOUR STREAMING DASHBOARD</p>
+        <h1>Everything in one place.</h1>
+        <p class="sub">Pick a service, paste a video/channel URL, and open or embed it when the platform allows it.</p>
+      </div>
+    </section>
+
+    <section class="service-grid" aria-label="Streaming services">
+      <button class="service twitch" data-service="twitch"><b>◉</b><span>Twitch</span><small>Live streams</small></button>
+      <button class="service youtube" data-service="youtube"><b>▶</b><span>YouTube</span><small>Videos & live</small></button>
+      <button class="service tiktok" data-service="tiktok"><b>♪</b><span>TikTok</span><small>Videos</small></button>
+      <button class="service vrm" data-service="vrm"><b>◆</b><span>VR-M.net</span><small>Open site / content</small></button>
+    </section>
+
+    <section class="workspace">
+      <div class="panel controls">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">PLAYER</p>
+            <h2 id="playerTitle">Choose a service</h2>
+          </div>
+          <button id="clearBtn" class="small-btn">Clear</button>
+        </div>
+
+        <label for="urlInput">Video, channel, or stream URL</label>
+        <div class="url-row">
+          <input id="urlInput" type="url" placeholder="https://www.youtube.com/watch?v=...">
+          <button id="loadBtn" class="primary">Load</button>
+        </div>
+
+        <div id="quickLinks" class="quick-links"></div>
+
+        <div id="notice" class="notice">
+          Select a service above. The hub does not bypass logins, DRM, paywalls, or platform embedding restrictions.
+        </div>
+      </div>
+
+      <div class="panel player-panel">
+        <div id="emptyPlayer" class="empty-player">
+          <div class="play-ring">▶</div>
+          <h2>Nothing loaded</h2>
+          <p>Your embedded player will appear here when the selected service supports it.</p>
+        </div>
+        <iframe id="player" title="Streaming player" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share" allowfullscreen hidden></iframe>
+        <div id="externalCard" class="external-card" hidden>
+          <div class="external-icon">↗</div>
+          <h2>Open on the service</h2>
+          <p>This site does not allow this content to be embedded here.</p>
+          <a id="externalLink" class="primary link-btn" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel help">
+      <div>
+        <p class="eyebrow">HOW IT WORKS</p>
+        <h2>One page, multiple services.</h2>
+      </div>
+      <div class="help-grid">
+        <div><b>1</b><span>Choose Twitch, YouTube, TikTok, or VR-M.net.</span></div>
+        <div><b>2</b><span>Paste a supported URL into the player box.</span></div>
+        <div><b>3</b><span>Stream here when the platform permits embedding, or open it externally.</span></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="aboutDialog">
+    <button class="dialog-close" id="closeAbout">×</button>
+    <p class="eyebrow">ABOUT STREAMHUB</p>
+    <h2>Built for a GitHub Pages site.</h2>
+    <p>StreamHub is a front-end launcher/player. It does not proxy, download, decrypt, or bypass any streaming service. Some platforms require their own player or block iframe embedding.</p>
+    <p class="muted">For Twitch embeds, the platform requires a valid <code>parent</code> domain. GitHub Pages sites are supported by using your actual Pages hostname.</p>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
